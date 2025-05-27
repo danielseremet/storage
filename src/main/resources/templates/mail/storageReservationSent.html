@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<html xmlns:th="http://www.thymeleaf.org" th:lang="${#locale.language}" lang="en">
+  <meta charset="UTF-8">
+  <title th:text="#{email.request.title}">Storage reservation request sent</title>
+</head>
+<body>
+<p th:text="#{email.activation.greeting(${user.login})}">Dear</p>
+<p th:text="#{email.reservation.text1}">Your Storage reservation request was sent to the administration, we will notify you as soon as it will be approved</p>
+<p>
+  <span th:text="#{email.activation.text2}">Regards, </span>
+  <br />
+  <em th:text="#{email.signature}">JHipster.</em>
+</p>
+</body>
+</html>

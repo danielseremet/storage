@@ -1,0 +1,40 @@
+{
+  "annotations": {
+    "changelogDate": "20250522134246"
+  },
+  "applications": "*",
+  "fields": [
+    {
+      "fieldName": "totalSize",
+      "fieldType": "Integer"
+    },
+    {
+      "fieldName": "usedSize",
+      "fieldType": "Integer"
+    },
+    {
+      "fieldName": "activated",
+      "fieldType": "Boolean"
+    },
+    {
+      "fieldName": "createdBy",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "createdDate",
+      "fieldType": "Instant"
+    }
+  ],
+  "name": "UserReservations",
+  "relationships": [
+    {
+      "otherEntityField": "id",
+      "otherEntityName": "user",
+      "relationshipName": "user",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one",
+      "relationshipWithBuiltInEntity": true
+    }
+  ],
+  "searchEngine": "no"
+}

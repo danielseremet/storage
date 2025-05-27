@@ -1,0 +1,24 @@
+entity StorageFile {
+  name String
+  size Integer
+  mimeType String
+  path String
+  createdBy String
+  createdDate Instant
+}
+
+entity UserReservations {
+  totalSize Integer
+  usedSize Integer
+  activated Boolean
+  createdBy String
+  createdDate Instant
+}
+
+relationship ManyToOne {
+  StorageFile{user(id)} to User with builtInEntity
+}
+
+relationship ManyToOne {
+  UserReservations{user(id)} to User with builtInEntity
+}
