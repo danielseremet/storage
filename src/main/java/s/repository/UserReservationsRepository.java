@@ -34,15 +34,18 @@ public interface UserReservationsRepository extends ReactiveCrudRepository<UserR
     @Override
     Mono<Void> deleteById(Long id);
 
+    @Query("SELECT * FROM user_reservations entity WHERE entity.user_id = :id")
+    Mono<UserReservations> findByUserId(Long id);
+
     @Modifying
     @Query("""
-            INSERT INTO user_reservations(total_size, used_size, activated, created_by, created_date, user_id)
-            SELECT 200 , 0 , false ,:name,CURRENT_TIMESTAMP ,id
-            FROM jhi_user
-            where login = :name
+        INSERT INTO user_reservations(total_size, used_size, activated, created_by, created_date, user_id)
+        SELECT :size , 0 , false ,:name,CURRENT_TIMESTAMP ,id
+        FROM jhi_user
+        where login = :name
 
-            """)
-     Mono<Void> saveUserReservation(@Param("name") String name);
+        """)
+     Mono<Void> saveUserReservation(@Param("name") String name, @Param("size") int size);
 
 
 

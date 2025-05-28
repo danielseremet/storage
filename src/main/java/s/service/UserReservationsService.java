@@ -16,7 +16,7 @@ import s.repository.UserReservationsRepository;
 @Service
 public class UserReservationsService {
 
-    private static final Logger LOG = LoggerFactory.getLogger(UserService.class);
+    private static final Logger LOG = LoggerFactory.getLogger(UserReservationsService.class);
 
     private final UserReservationsRepository userReservationsRepository;
     private final UserRepository userRepository;
@@ -40,7 +40,7 @@ public class UserReservationsService {
         return userRepository.findById(id)
                 .switchIfEmpty(Mono.defer(() -> {
                     LOG.warn("User with id {} not found", id);
-                    return Mono.empty(); // or return Mono.error(new UserNotFoundException(...));
+                    return Mono.empty();
                 }))
                 .flatMap(user -> {
                     LOG.debug("Sending mail and approving reservations for user: {}", user.getId());
@@ -48,13 +48,12 @@ public class UserReservationsService {
                         .doOnSuccess(res -> mailService.sendStorageReservationApprovedMail(user))
                         .then(userAuthorityService.grantActivatedAuthority(id));
                 });
-
     }
 
 
 
 
-    public Mono<Void> saveUserReservations() {
+    public Mono<Void> saveUserReservations(int storage) {
         return ReactiveSecurityContextHolder.getContext()
             .map(SecurityContext::getAuthentication)
             .map(Authentication::getName)
@@ -65,7 +64,7 @@ public class UserReservationsService {
                     .defaultIfEmpty(false)
                     .flatMap(activated -> {
                         if (!activated) {
-                            return userReservationsRepository.saveUserReservation(user.getLogin())
+                            return userReservationsRepository.saveUserReservation(user.getLogin(), storage)
                                 .doOnSuccess(res -> mailService.sendStorageReservationSentMail(user));
                         } else {
                             return Mono.error(new IllegalStateException("Storage already activated"));
@@ -74,6 +73,9 @@ public class UserReservationsService {
                     })
             );
     }
+
+
+
 
 
 

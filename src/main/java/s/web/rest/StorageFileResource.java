@@ -1,15 +1,12 @@
 package s.web.rest;
 
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.List;
-import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -18,15 +15,23 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import s.domain.StorageFile;
 import s.repository.StorageFileRepository;
+import s.security.AuthoritiesConstants;
+import s.service.MinioService;
 import s.web.rest.errors.BadRequestAlertException;
 import tech.jhipster.web.util.HeaderUtil;
 import tech.jhipster.web.util.reactive.ResponseUtil;
+
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.List;
+import java.util.Objects;
 
 /**
  * REST controller for managing {@link s.domain.StorageFile}.
  */
 
 @RestController
+@PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ACTIVATED + "\")")
 @RequestMapping("/api/storage-files")
 @Transactional
 public class StorageFileResource {
@@ -40,9 +45,29 @@ public class StorageFileResource {
 
     private final StorageFileRepository storageFileRepository;
 
-    public StorageFileResource(StorageFileRepository storageFileRepository) {
+    private final MinioService minioService;
+
+    public StorageFileResource(StorageFileRepository storageFileRepository, MinioService minioService) {
         this.storageFileRepository = storageFileRepository;
+        this.minioService = minioService;
     }
+
+    @PostMapping("/upload")
+    public  Mono<ResponseEntity<Void>>  uploadFileToMinio(@RequestPart("file")  Mono<FilePart>  file) {
+        LOG.debug("REST request to upload StorageFile : {}", file);
+        return minioService.uploadFile(file)
+            .then(Mono.fromCallable(() -> ResponseEntity.ok()
+                .build()));
+    }
+
+    @DeleteMapping("/delete/{id}")
+    public Mono<ResponseEntity<Void>> deleteMinioFile(@PathVariable(value="id") Long id) {
+        LOG.debug("REST request to delete File From Minio : {}", id);
+        return minioService.deleteFile(id)
+            .then(Mono.fromCallable(() -> ResponseEntity.ok()
+                .build()));
+    }
+
 
     /**
      * {@code POST  /storage-files} : Create a new storageFile.
@@ -73,7 +98,7 @@ public class StorageFileResource {
     /**
      * {@code PUT  /storage-files/:id} : Updates an existing storageFile.
      *
-     * @param id the id of the storageFile to save.
+     * @param id          the id of the storageFile to save.
      * @param storageFile the storageFile to update.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the updated storageFile,
      * or with status {@code 400 (Bad Request)} if the storageFile is not valid,
@@ -114,7 +139,7 @@ public class StorageFileResource {
     /**
      * {@code PATCH  /storage-files/:id} : Partial updates given fields of an existing storageFile, field will ignore if it is null
      *
-     * @param id the id of the storageFile to save.
+     * @param id          the id of the storageFile to save.
      * @param storageFile the storageFile to update.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the updated storageFile,
      * or with status {@code 400 (Bad Request)} if the storageFile is not valid,
@@ -122,7 +147,7 @@ public class StorageFileResource {
      * or with status {@code 500 (Internal Server Error)} if the storageFile couldn't be updated.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
-    @PatchMapping(value = "/{id}", consumes = { "application/json", "application/merge-patch+json" })
+    @PatchMapping(value = "/{id}", consumes = {"application/json", "application/merge-patch+json"})
     public Mono<ResponseEntity<StorageFile>> partialUpdateStorageFile(
         @PathVariable(value = "id", required = false) final Long id,
         @RequestBody StorageFile storageFile
@@ -191,6 +216,7 @@ public class StorageFileResource {
 
     /**
      * {@code GET  /storage-files} : get all the storageFiles as a stream.
+     *
      * @return the {@link Flux} of storageFiles.
      */
     @GetMapping(value = "", produces = MediaType.APPLICATION_NDJSON_VALUE)

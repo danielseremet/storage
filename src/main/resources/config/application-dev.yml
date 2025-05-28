@@ -54,12 +54,21 @@ spring:
     password: postgres
   thymeleaf:
     cache: false
+  servlet:
+    multipart:
+      enabled: true
 
 server:
   port: 8080
   # make sure requests the proxy uri instead of the server one
   forward-headers-strategy: native
 
+
+minio:
+  url: http://localhost:9000
+  access-key: ${MINIO_ACCESS_KEY:minioadmin}
+  secret-key: ${MINIO_SECRET_KEY:minioadmin}
+  bucket: ${MINIO_BUCKET:mybucket}
 # ===================================================================
 # JHipster specific properties
 #
@@ -95,6 +104,8 @@ jhipster:
       host: localhost
       port: 5000
       ring-buffer-size: 512
+
+
 # ===================================================================
 # Application specific properties
 # Add your own application properties here, see the ApplicationProperties class

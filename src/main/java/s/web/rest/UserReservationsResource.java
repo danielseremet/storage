@@ -32,6 +32,7 @@ import java.util.Objects;
  */
 
 @RestController
+@PreAuthorize("hasAuthority('ROLE_ACTIVATED')")
 @RequestMapping("/api/user-reservations")
 @Transactional
 public class UserReservationsResource {
@@ -55,19 +56,19 @@ public class UserReservationsResource {
         this.userReservationsService = userReservationsService;
     }
 
-    @PostMapping("/request-reservation")
-    public Mono<Void> requestReservations() {
+    @PostMapping("/request-storage/{mb}")
+    public Mono<Void> requestReservations(@PathVariable int mb) {
         LOG.debug("REST request to get reservation");
-        return userReservationsService.saveUserReservations().then();
+        return userReservationsService.saveUserReservations(mb);
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @GetMapping("/get_active_requests")
     public Flux<UserReservations> getUsersReservationsRequests() {
         return userReservationsService.getAwaitingApprovalReservations();
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @PutMapping("/approve_reservation/{id}")
     public Mono<Void> approveUserReservations(@PathVariable(value = "id") final Long id) {
         LOG.debug("REST request to approve UserReservations : {}", id);
