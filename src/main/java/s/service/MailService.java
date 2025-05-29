@@ -3,7 +3,9 @@ package s.service;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 import java.util.function.Consumer;
 
 import org.slf4j.Logger;
@@ -65,6 +67,7 @@ public class MailService {
         }).subscribe();
     }
 
+
     private void sendEmailSync(String to, String subject, String content, boolean isMultipart, boolean isHtml) {
         LOG.debug(
             "Send email[multipart '{}' and html '{}'] to '{}' with subject '{}' and content={}",
@@ -95,6 +98,30 @@ public class MailService {
             sendEmailFromTemplateSync(user, templateName, titleKey);
             return Mono.empty();
         }).subscribe();
+    }
+
+    public void sendEmailFromTemplateWithContext(User user, String templateName, String titleKey, Map<String, Object> context) {
+        Mono.defer(() -> {
+            sendEmailFromTemplateSyncWithContext(user, templateName, titleKey, context);
+            return Mono.empty();
+        }).subscribe();
+    }
+
+    private void sendEmailFromTemplateSyncWithContext(User user, String templateName, String titleKey, Map<String, Object> info) {
+        if (user.getEmail() == null) {
+            LOG.debug("Email doesnt exist for user '{}''", user.getLogin());
+            return;
+        }
+        Locale locale = Locale.forLanguageTag(user.getLangKey());
+        Context context = new Context(locale);
+        context.setVariable(USER, user);
+        context.setVariable(BASE_URL, jHipsterProperties.getMail().getBaseUrl());
+        if (info != null) {
+            info.forEach(context::setVariable);
+        }
+        String content = templateEngine.process(templateName, context);
+        String subject = messageSource.getMessage(titleKey, null, locale);
+        sendEmailSync(user.getEmail(), subject, content, false, true);
     }
 
     private void sendEmailFromTemplateSync(User user, String templateName, String titleKey) {
@@ -134,6 +161,15 @@ public class MailService {
     public void sendStorageReservationApprovedMail(User user) {
         LOG.debug("Email about storage reservation approval sent");
         sendEmailFromTemplate(user, "mail/storageReservationApproved", "email.approved.title");
+
+    }
+
+    public  void  sendStorageDepletingMail(User user,int storageLeft, int totalStorage) {
+        LOG.debug("Sending storage depleting email to '{}'", user.getEmail());
+        Map<String,Object> info = new HashMap<>();
+        info.put("storageLeft", storageLeft);
+        info.put("totalStorage", totalStorage);
+         sendEmailFromTemplateWithContext(user, "mail/lowStorageWarning", "email.depleting.title", info);
 
     }
 }

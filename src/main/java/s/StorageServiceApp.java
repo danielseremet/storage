@@ -16,12 +16,11 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.core.env.Environment;
 import s.config.ApplicationProperties;
 import s.config.CRLFLogConverter;
-import s.config.MinioConfig;
 import tech.jhipster.config.DefaultProfileUtil;
 import tech.jhipster.config.JHipsterConstants;
 
 @SpringBootApplication
-@EnableConfigurationProperties({ LiquibaseProperties.class, ApplicationProperties.class, MinioConfig.class })
+@EnableConfigurationProperties({ LiquibaseProperties.class, ApplicationProperties.class})
 public class StorageServiceApp {
 
     private static final Logger LOG = LoggerFactory.getLogger(StorageServiceApp.class);

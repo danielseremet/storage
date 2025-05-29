@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<html xmlns:th="http://www.thymeleaf.org" th:lang="${#locale.language}" lang="en">
+<meta charset="UTF-8">
+<title th:text="#{email.depleting.title}">Your remaining storage is decreasing </title>
+</head>
+<body>
+<p th:text="#{email.activation.greeting(${user.login})}">Dear</p>
+<p th:text="#{email.lowStorage.text1(${storageLeft}, ${totalStorage})}">Your Storage resource is depleting you currently have  x mb left from x</p>
+<p th:text="#{email.lowStorage.text2}">Take notice that when the storage is depleted completely your account will be freezed</p>
+<p>
+  <span th:text="#{email.activation.text2}">Regards, </span>
+  <br />
+  <em th:text="#{email.signature}">JHipster.</em>
+</p>
+</body>
+</html>

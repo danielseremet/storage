@@ -2,7 +2,6 @@ package s.config;
 
 
 import io.minio.MinioClient;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
@@ -10,7 +9,8 @@ import org.springframework.stereotype.Component;
 public class MinioClientConfig {
 
     @Bean
-    public MinioClient minioClient(@Qualifier("minioConfig") MinioConfig config) {
+    public MinioClient minioClient(ApplicationProperties applicationProperties) {
+        ApplicationProperties.MinioConfig config = applicationProperties.getMinio();
         return MinioClient.builder()
             .endpoint(config.getUrl())
             .credentials(config.getAccessKey(), config.getSecretKey())

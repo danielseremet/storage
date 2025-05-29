@@ -64,11 +64,7 @@ server:
   forward-headers-strategy: native
 
 
-minio:
-  url: http://localhost:9000
-  access-key: ${MINIO_ACCESS_KEY:minioadmin}
-  secret-key: ${MINIO_SECRET_KEY:minioadmin}
-  bucket: ${MINIO_BUCKET:mybucket}
+
 # ===================================================================
 # JHipster specific properties
 #
@@ -106,6 +102,7 @@ jhipster:
       ring-buffer-size: 512
 
 
+
 # ===================================================================
 # Application specific properties
 # Add your own application properties here, see the ApplicationProperties class
@@ -115,4 +112,11 @@ jhipster:
 # https://www.jhipster.tech/common-application-properties/
 # ===================================================================
 
-# application:
+application:
+  minio:
+    url: http://localhost:9000
+    access-key: ${MINIO_ACCESS_KEY:minioadmin}
+    secret-key: ${MINIO_SECRET_KEY:minioadmin}
+    bucket: ${MINIO_BUCKET:mybucket}
+
+

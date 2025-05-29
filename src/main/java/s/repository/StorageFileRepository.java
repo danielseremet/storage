@@ -35,12 +35,6 @@ public interface StorageFileRepository extends ReactiveCrudRepository<StorageFil
     @Override
     Mono<Void> deleteById(Long id);
 
-    @Modifying
-    @Query("""
-            INSERT INTO storage_file(name, size, mime_type, path, created_by, created_date, user_id)
-            VALUES (:#{#dto.name},:#{#dto.size},:#{#dto.context},:#{#dto.path},:#{#dto.createdBy},:#{#dto.createdDate},:#{#dto.user.id})
-            """)
-    Mono<Void> saveDTO(@Param("dto") StorageFileDTO dto);
 
 
 }

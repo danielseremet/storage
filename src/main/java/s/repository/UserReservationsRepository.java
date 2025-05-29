@@ -63,6 +63,13 @@ public interface UserReservationsRepository extends ReactiveCrudRepository<UserR
             """)
     Mono<Void> approveUsersReservation(@Param("user_id") long user_id);
 
+    @Modifying
+    @Query("""
+            UPDATE user_reservations
+            set used_size = :size
+            where id = :id
+            """)
+    Mono<Void> updateUsedSize(@Param("size") int size,@Param("id")Long id);
 }
 
 interface UserReservationsRepositoryInternal {

@@ -1,8 +1,10 @@
 package s.web.rest;
 
+import com.google.common.net.HttpHeaders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +19,7 @@ import s.domain.StorageFile;
 import s.repository.StorageFileRepository;
 import s.security.AuthoritiesConstants;
 import s.service.MinioService;
+import s.service.StorageFileService;
 import s.web.rest.errors.BadRequestAlertException;
 import tech.jhipster.web.util.HeaderUtil;
 import tech.jhipster.web.util.reactive.ResponseUtil;
@@ -39,6 +42,7 @@ public class StorageFileResource {
     private static final Logger LOG = LoggerFactory.getLogger(StorageFileResource.class);
 
     private static final String ENTITY_NAME = "storageFile";
+    private final StorageFileService storageFileService;
 
     @Value("${jhipster.clientApp.name}")
     private String applicationName;
@@ -47,9 +51,10 @@ public class StorageFileResource {
 
     private final MinioService minioService;
 
-    public StorageFileResource(StorageFileRepository storageFileRepository, MinioService minioService) {
+    public StorageFileResource(StorageFileRepository storageFileRepository, MinioService minioService, StorageFileService storageFileService) {
         this.storageFileRepository = storageFileRepository;
         this.minioService = minioService;
+        this.storageFileService = storageFileService;
     }
 
     @PostMapping("/upload")
@@ -66,6 +71,28 @@ public class StorageFileResource {
         return minioService.deleteFile(id)
             .then(Mono.fromCallable(() -> ResponseEntity.ok()
                 .build()));
+    }
+
+
+    @GetMapping("/download/{name}")
+    public Mono<ResponseEntity<ByteArrayResource>> downloadMinioFile(@PathVariable(value="name") String name) {
+        LOG.debug("REST request to download File From Minio : {}", name);
+        return minioService.getFile(name)
+            .map(resource-> ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + name + "\"")
+                .contentType(MediaType.parseMediaType("application/octet-stream"))
+                .contentLength(resource.contentLength())
+                .body(resource));
+    }
+
+    @GetMapping("/export/csv")
+    public Mono<ResponseEntity<String>> exportCsv() {
+        LOG.debug("REST request to exportCsv File");
+        return storageFileService.exportCsvMustacheTemplate()
+            .map(csv -> ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"files.csv\"")
+                .contentType(MediaType.parseMediaType("text/csv"))
+                .body(csv));
     }
 
 
