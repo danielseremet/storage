@@ -16,19 +16,16 @@ import s.repository.UserRepository;
 @Service
 public class UserAuthorityService {
 
-    private static final Logger LOG = LoggerFactory.getLogger(UserService.class);
+    private static final Logger LOG = LoggerFactory.getLogger(UserAuthorityService.class);
 
     private final UserAuthorityRepository userAuthorityRepository;
-    private final UserRepository userRepository;
-    private final AuthorityRepository authorityRepository;
-    public UserAuthorityService(UserAuthorityRepository userAuthorityRepository, UserRepository userRepository, AuthorityRepository authorityRepository) {
+    public UserAuthorityService(UserAuthorityRepository userAuthorityRepository ) {
         this.userAuthorityRepository = userAuthorityRepository;
-        this.userRepository = userRepository;
-        this.authorityRepository = authorityRepository;
     }
 
 
     public Mono<Void> grantActivatedAuthority(Long id) {
+        LOG.debug("grantActivatedAuthority for user id {}", id);
         return userAuthorityRepository.grantActivatedAuthority(id);
     }
 

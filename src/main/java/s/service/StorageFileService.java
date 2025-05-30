@@ -1,8 +1,13 @@
 package s.service;
 
 
+import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
 import com.samskivert.mustache.Mustache;
 import com.samskivert.mustache.Template;
+import io.vavr.control.Try;
+import org.apache.poi.xwpf.usermodel.XWPFDocument;
+import org.apache.poi.xwpf.usermodel.XWPFParagraph;
+import org.apache.poi.xwpf.usermodel.XWPFRun;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.buffer.DataBufferUtils;
@@ -15,12 +20,16 @@ import s.repository.StorageFileRepository;
 import s.repository.UserReservationsRepository;
 import s.service.dto.FileDTO;
 
+import javax.crypto.SecretKey;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicReference;
 
 
 @Service
@@ -47,7 +56,12 @@ public class StorageFileService {
     }
 
     public Mono<Void> deleteStorageFileById(Long id) {
-        return storageFileRepository.deleteById(id);
+        return storageFileRepository.findById(id)
+            .flatMap(storageFile ->
+                userReservationsService.updateUsedSize(-storageFile.getSize())
+                    .doOnNext(nothing -> LOG.info("succesfully udated used size for deleated the file size :{}",storageFile.getSize()))
+                    .then(storageFileRepository.deleteById(id))
+            ).then();
     }
 
     public Mono<String> getFileName(Long storageFileId) {
@@ -91,11 +105,18 @@ public class StorageFileService {
 
     public Mono<Void> saveUploadedFileInfo(FileDTO file, String bucket) {
         LOG.debug("SERVICE request save uploaded file info {}", file);
+        String encryptedName = null;
+         try {
+             final SecretKey key = (AESutil.generateKey());
+             encryptedName = AESutil.encrypt(file.name(), key);
+         }catch(Exception e) {
+             LOG.debug("An Error has occured while generating the enctription :{}", e);
+         }
         StorageFile storageFile = new StorageFile();
         storageFile.setName(file.name());
         storageFile.setSize((int) file.size());
         storageFile.setMimeType(file.content());
-        storageFile.setPath("/" + bucket + "/" + file.name());
+        storageFile.setPath("/" + bucket + "/" + encryptedName);
         storageFile.setCreatedDate(Instant.now());
 
         return userService.getCurrentUser()
@@ -138,7 +159,7 @@ public class StorageFileService {
                         Map<String, Object> context = new HashMap<>();
                         context.put("storageFiles", storageFiles);
 
-                        Template tmpl = mustacheCompiler.compile(new InputStreamReader(getClass().getResourceAsStream("/templates/exportStorageFileTemplate.mustache")));
+                        Template tmpl = mustacheCompiler.compile(new InputStreamReader(getClass().getResourceAsStream("/templates/mustache/exportStorageFileTemplate.mustache")));
                         String renderHtml = tmpl.execute(context);
                         return Mono.just(renderHtml);
                     })
@@ -161,6 +182,43 @@ public class StorageFileService {
                         return Mono.just(renderHtml);
                     })
                 );
+    }
+
+    public Mono<byte[]> exportMustacheTemplatePdf() {
+        LOG.debug("SERVICE request rendered mustache template pdf for current user");
+        return renderedMustacheTemplate()
+            .map(html -> {
+                ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+                PdfRendererBuilder builder = new PdfRendererBuilder();
+                builder.withHtmlContent(html,null);
+                builder.toStream(outputStream);
+                if(html == null || html.isEmpty()) {
+                    LOG.debug("template pdf is empty");
+                }
+                try {
+                    builder.run();
+                } catch (IOException e) {
+                    LOG.debug("IO exception while rendering html pdf", e);
+                }
+                return outputStream.toByteArray();
+            });
+    }
+
+    public Mono<byte[]> exportMustacheTemplateDocx() {
+        LOG.debug("SERVICE request rendered mustache template docx for current user");
+        return renderedMustacheTemplate()
+            .map(html -> {
+                try(XWPFDocument document = new XWPFDocument();
+                    ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+                    XWPFParagraph paragraph = document.createParagraph();
+                    XWPFRun run = paragraph.createRun();
+                    run.setText(html);
+                    document.write(outputStream);
+                    return outputStream.toByteArray();
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            });
     }
 
 

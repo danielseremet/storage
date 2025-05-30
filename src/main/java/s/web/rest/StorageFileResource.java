@@ -74,15 +74,18 @@ public class StorageFileResource {
     }
 
 
-    @GetMapping("/download/{name}")
-    public Mono<ResponseEntity<ByteArrayResource>> downloadMinioFile(@PathVariable(value="name") String name) {
-        LOG.debug("REST request to download File From Minio : {}", name);
-        return minioService.getFile(name)
-            .map(resource-> ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + name + "\"")
-                .contentType(MediaType.parseMediaType("application/octet-stream"))
-                .contentLength(resource.contentLength())
-                .body(resource));
+    @GetMapping("/download/{id}")
+    public Mono<ResponseEntity<ByteArrayResource>> downloadMinioFile(@PathVariable(value="id") Long id) {
+        LOG.debug("REST request to download File From Minio : {}", id);
+        return minioService.getFile(id)
+            .flatMap(resource->
+                    storageFileService.getFileName(id)
+                        .map( name-> ResponseEntity.ok()
+                            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + name + "\"")
+                            .contentType(MediaType.parseMediaType("application/octet-stream"))
+                            .contentLength(resource.contentLength())
+                            .body(resource)
+                            ));
     }
 
     @GetMapping("/export/csv")
@@ -93,6 +96,26 @@ public class StorageFileResource {
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"files.csv\"")
                 .contentType(MediaType.parseMediaType("text/csv"))
                 .body(csv));
+    }
+
+    @GetMapping("/export/pdf")
+    public Mono<ResponseEntity<byte[]>> exportPdf() {
+        LOG.debug("REST request to exportPdf File");
+        return storageFileService.exportMustacheTemplatePdf()
+            .map(pdf -> ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"report.pdf\"")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(pdf));
+    }
+
+    @GetMapping("/export/docx")
+    public Mono<ResponseEntity<byte[]>> exportDocx() {
+        LOG.debug("REST request to exportDocx File");
+        return storageFileService.exportMustacheTemplateDocx()
+            .map(docx -> ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"report.docx\"")
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .body(docx));
     }
 
 

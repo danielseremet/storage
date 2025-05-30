@@ -28,6 +28,7 @@ import s.domain.User;
 import s.repository.UserRepository;
 import s.security.AuthoritiesConstants;
 import s.service.MailService;
+import s.service.UserAuthorityService;
 import s.service.UserService;
 import s.service.dto.AdminUserDTO;
 import s.web.rest.errors.BadRequestAlertException;
@@ -81,6 +82,7 @@ public class UserResource {
     );
 
     private static final Logger LOG = LoggerFactory.getLogger(UserResource.class);
+    private final UserAuthorityService userAuthorityService;
 
     @Value("${jhipster.clientApp.name}")
     private String applicationName;
@@ -91,11 +93,13 @@ public class UserResource {
 
     private final MailService mailService;
 
-    public UserResource(UserService userService, UserRepository userRepository, MailService mailService) {
+    public UserResource(UserService userService, UserRepository userRepository, MailService mailService, UserAuthorityService userAuthorityService) {
         this.userService = userService;
         this.userRepository = userRepository;
         this.mailService = mailService;
+        this.userAuthorityService = userAuthorityService;
     }
+
 
     /**
      * {@code POST  /admin/users}  : Creates a new user.

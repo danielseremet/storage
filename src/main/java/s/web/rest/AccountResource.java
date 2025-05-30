@@ -11,6 +11,7 @@ import reactor.core.publisher.Mono;
 import s.repository.UserRepository;
 import s.security.SecurityUtils;
 import s.service.MailService;
+import s.service.UserReservationsService;
 import s.service.UserService;
 import s.service.dto.AdminUserDTO;
 import s.service.dto.PasswordChangeDTO;
@@ -40,10 +41,20 @@ public class AccountResource {
 
     private final MailService mailService;
 
-    public AccountResource(UserRepository userRepository, UserService userService, MailService mailService) {
+    private final UserReservationsService userReservationsService;
+
+    public AccountResource(UserRepository userRepository, UserService userService, MailService mailService, UserReservationsService userReservationsService) {
         this.userRepository = userRepository;
         this.userService = userService;
         this.mailService = mailService;
+        this.userReservationsService = userReservationsService;
+    }
+
+
+    @PostMapping("/request-storage/{mb}")
+    public Mono<Void> requestReservations(@PathVariable int mb) {
+        LOG.debug("REST request to get reservation");
+        return userReservationsService.saveUserReservations(mb);
     }
 
     /**
@@ -54,6 +65,9 @@ public class AccountResource {
      * @throws EmailAlreadyUsedException {@code 400 (Bad Request)} if the email is already used.
      * @throws LoginAlreadyUsedException {@code 400 (Bad Request)} if the login is already used.
      */
+
+
+
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
     public Mono<Void> registerAccount(@Valid @RequestBody ManagedUserVM managedUserVM) {

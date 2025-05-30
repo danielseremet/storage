@@ -54,7 +54,7 @@ public class UserService {
             .map(SecurityContext::getAuthentication)
             .map(Authentication::getName)
             .flatMap(userRepository::findOneByLogin)
-            .doOnSuccess(user -> LOG.info("User: {}", user));
+            .doOnSuccess(user -> LOG.info("Request For getting User: {}", user));
     }
 
 

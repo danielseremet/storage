@@ -18,6 +18,7 @@ import s.config.ApplicationProperties;
 import java.io.InputStream;
 
 
+
 @Service
 public class MinioService {
 
@@ -27,12 +28,14 @@ public class MinioService {
     private final StorageFileService storageFileService;
     private final ApplicationProperties.MinioConfig minioConfig;
     private final String bucket;
+    private final UserReservationsService userReservationsService;
 
-    public MinioService(MinioClient minioClient, ApplicationProperties  applicationProperties, StorageFileService storageFileService) {
+    public MinioService(MinioClient minioClient, ApplicationProperties  applicationProperties, StorageFileService storageFileService, UserReservationsService userReservationsService) {
         this.minioClient = minioClient;
         this.minioConfig = applicationProperties.getMinio();
         this.storageFileService = storageFileService;
         bucket = minioConfig.getBucket();
+        this.userReservationsService = userReservationsService;
     }
 
 
@@ -86,19 +89,25 @@ public class MinioService {
             ).then(storageFileService.deleteStorageFileById(storageFileId));
     }
 
-    public Mono<ByteArrayResource> getFile(String fileName) {
-        LOG.debug("SERVICE request to download file : {}", fileName);
-        return Mono.fromCallable(() -> {
-            InputStream stream = minioClient.getObject(
-                GetObjectArgs.builder()
-                    .bucket(bucket)
-                    .object(fileName)
-                    .build()
-            );
-            byte[] bytes = stream.readAllBytes();
-            ByteArrayResource resource = new ByteArrayResource(bytes);
-            return resource;
-        });
+    public Mono<ByteArrayResource> getFile(Long id) {
+        LOG.debug("SERVICE request to download file : {}", id);
+        return storageFileService.getFileName(id)
+                .flatMap(fileName->
+                    Mono.fromCallable(() -> {
+                        InputStream stream = minioClient.getObject(
+                            GetObjectArgs.builder()
+                                .bucket(bucket)
+                                .object(fileName)
+                                .build()
+                        );
+                        byte[] bytes = stream.readAllBytes();
+                        ByteArrayResource resource = new ByteArrayResource(bytes);
+                        return resource;
+                    })
+                );
+
+
+
     }
 
 

@@ -56,11 +56,6 @@ public class UserReservationsResource {
         this.userReservationsService = userReservationsService;
     }
 
-    @PostMapping("/request-storage/{mb}")
-    public Mono<Void> requestReservations(@PathVariable int mb) {
-        LOG.debug("REST request to get reservation");
-        return userReservationsService.saveUserReservations(mb);
-    }
 
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @GetMapping("/get_active_requests")

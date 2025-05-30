@@ -1,19 +1,38 @@
-<table border="1">
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8"/>
+  <style>
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      border: 1px solid black;
+      padding: 5px;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
+  </style>
+</head>
+<body>
+<table>
   <thead>
-    <tr>
-      <th>id</th>
-      <th>name</th>
-      <th>size</th>
-      <th>mimeType</th>
-      <th>path</th>
-      <th>createdBy</th>
-      <th>createdDate</th>
-      <th>useId</th>
-    </tr>
+  <tr>
+    <th>id</th>
+    <th>name</th>
+    <th>size</th>
+    <th>mimeType</th>
+    <th>path</th>
+    <th>createdBy</th>
+    <th>createdDate</th>
+    <th>userId</th>
+  </tr>
   </thead>
   <tbody>
   {{#storageFiles}}
-  <tr>
+    <tr>
       <td>{{id}}</td>
       <td>{{name}}</td>
       <td>{{size}}</td>
@@ -22,7 +41,10 @@
       <td>{{createdBy}}</td>
       <td>{{createdDate}}</td>
       <td>{{userId}}</td>
-  </tr>
+    </tr>
   {{/storageFiles}}
   </tbody>
 </table>
+</body>
+</html>
+

@@ -3,12 +3,18 @@
   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
-                        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
 
-  <changeSet id="add-role-activated-authority" author="yourname">
-    <insert tableName="jhi_authority">
-      <column name="name" value="ROLE_ACTIVATED"/>
-    </insert>
+  <changeSet id="add-role-activated-authority" author="daniel" runOnChange="true">
+    <comment>Insert ROLE_ACTIVATED only if it doesn't exist</comment>
+
+    <sql>
+      INSERT INTO jhi_authority (name)
+      VALUES ('ROLE_ACTIVATED')
+        ON CONFLICT (name) DO NOTHING;
+    </sql>
   </changeSet>
 
 </databaseChangeLog>
+
+
