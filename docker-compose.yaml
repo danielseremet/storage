@@ -11,6 +11,8 @@ services:
       - "5433:5432"
     networks:
       - jhipster-net
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
 
   minio:
     image: quay.io/minio/minio
@@ -53,3 +55,6 @@ services:
 networks:
   jhipster-net:
     driver: bridge
+
+volumes:
+  postgres_data:

@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +19,7 @@ import reactor.core.publisher.Mono;
 import s.domain.StorageFile;
 import s.repository.StorageFileRepository;
 import s.security.AuthoritiesConstants;
+import s.service.ExportStorageFactory;
 import s.service.MinioService;
 import s.service.StorageFileService;
 import s.web.rest.errors.BadRequestAlertException;
@@ -51,10 +53,13 @@ public class StorageFileResource {
 
     private final MinioService minioService;
 
-    public StorageFileResource(StorageFileRepository storageFileRepository, MinioService minioService, StorageFileService storageFileService) {
+    private final ExportStorageFactory exportStorageFactory;
+
+    public StorageFileResource(StorageFileRepository storageFileRepository, MinioService minioService, StorageFileService storageFileService, ExportStorageFactory exportStorageFactory) {
         this.storageFileRepository = storageFileRepository;
         this.minioService = minioService;
         this.storageFileService = storageFileService;
+        this.exportStorageFactory = exportStorageFactory;
     }
 
     @PostMapping("/upload")
@@ -88,34 +93,12 @@ public class StorageFileResource {
                             ));
     }
 
-    @GetMapping("/export/csv")
-    public Mono<ResponseEntity<String>> exportCsv() {
-        LOG.debug("REST request to exportCsv File");
-        return storageFileService.exportCsvMustacheTemplate()
-            .map(csv -> ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"files.csv\"")
-                .contentType(MediaType.parseMediaType("text/csv"))
-                .body(csv));
-    }
 
-    @GetMapping("/export/pdf")
-    public Mono<ResponseEntity<byte[]>> exportPdf() {
-        LOG.debug("REST request to exportPdf File");
-        return storageFileService.exportMustacheTemplatePdf()
-            .map(pdf -> ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"report.pdf\"")
-                .contentType(MediaType.APPLICATION_PDF)
-                .body(pdf));
-    }
 
-    @GetMapping("/export/docx")
-    public Mono<ResponseEntity<byte[]>> exportDocx() {
-        LOG.debug("REST request to exportDocx File");
-        return storageFileService.exportMustacheTemplateDocx()
-            .map(docx -> ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"report.docx\"")
-                .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                .body(docx));
+    @GetMapping("export/{type}")
+    public Mono<ResponseEntity<Resource>> exportStorageFiles(@PathVariable String type) {
+        LOG.debug("REST request to exportStorageFiles {} format", type);
+        return exportStorageFactory.exportStorageFileInfoGeneric(type);
     }
 
 

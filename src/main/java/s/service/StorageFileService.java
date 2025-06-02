@@ -4,7 +4,6 @@ package s.service;
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
 import com.samskivert.mustache.Mustache;
 import com.samskivert.mustache.Template;
-import io.vavr.control.Try;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.apache.poi.xwpf.usermodel.XWPFRun;
@@ -19,7 +18,6 @@ import s.domain.User;
 import s.repository.StorageFileRepository;
 import s.repository.UserReservationsRepository;
 import s.service.dto.FileDTO;
-
 import javax.crypto.SecretKey;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -29,7 +27,7 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicReference;
+
 
 
 @Service
@@ -42,17 +40,15 @@ public class StorageFileService {
 
     private static final Logger LOG = LoggerFactory.getLogger(StorageFileService.class);
     private final UserReservationsService userReservationsService;
-    private final Mustache.Compiler mustacheCompiler;
 
 
-    public StorageFileService(StorageFileRepository storageFileRepository, UserService userService, UserReservationsRepository userReservationsRepository, MailService mailService, UserReservationsService userReservationsService, Mustache.Compiler mustacheCompiler ) {
+
+    public StorageFileService(StorageFileRepository storageFileRepository, UserService userService, UserReservationsRepository userReservationsRepository, MailService mailService, UserReservationsService userReservationsService  ) {
         this.storageFileRepository = storageFileRepository;
         this.userService = userService;
         this.userReservationsRepository = userReservationsRepository;
         this.mailService = mailService;
         this.userReservationsService = userReservationsService;
-        this.mustacheCompiler = mustacheCompiler;
-
     }
 
     public Mono<Void> deleteStorageFileById(Long id) {
@@ -149,77 +145,14 @@ public class StorageFileService {
             );
     }
 
-    public Mono<String> renderedMustacheTemplate() {
-        LOG.debug("SERVICE request rendered mustache template for current user");
-        return userService.getCurrentUser()
-            .flatMap(user->
-                storageFileRepository.findByUser(user.getId())
-                    .collectList()
-                    .flatMap(storageFiles -> {
-                        Map<String, Object> context = new HashMap<>();
-                        context.put("storageFiles", storageFiles);
-
-                        Template tmpl = mustacheCompiler.compile(new InputStreamReader(getClass().getResourceAsStream("/templates/mustache/exportStorageFileTemplate.mustache")));
-                        String renderHtml = tmpl.execute(context);
-                        return Mono.just(renderHtml);
-                    })
-            );
-    }
 
 
-    public Mono<String> exportCsvMustacheTemplate() {
-        LOG.debug("SERVICE request rendered mustache csv template for current user");
-        return userService.getCurrentUser()
-                .flatMap(user->
-                    storageFileRepository.findByUser(user.getId())
-                    .collectList()
-                    .flatMap(storageFiles -> {
-                        Map<String, Object> context = new HashMap<>();
-                        context.put("storageFiles", storageFiles);
 
-                        Template tmpl = mustacheCompiler.compile(new InputStreamReader(getClass().getResourceAsStream("/templates/mustache/exportStorageFileToCsvTemplate.mustache")));
-                        String renderHtml = tmpl.execute(context);
-                        return Mono.just(renderHtml);
-                    })
-                );
-    }
 
-    public Mono<byte[]> exportMustacheTemplatePdf() {
-        LOG.debug("SERVICE request rendered mustache template pdf for current user");
-        return renderedMustacheTemplate()
-            .map(html -> {
-                ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-                PdfRendererBuilder builder = new PdfRendererBuilder();
-                builder.withHtmlContent(html,null);
-                builder.toStream(outputStream);
-                if(html == null || html.isEmpty()) {
-                    LOG.debug("template pdf is empty");
-                }
-                try {
-                    builder.run();
-                } catch (IOException e) {
-                    LOG.debug("IO exception while rendering html pdf", e);
-                }
-                return outputStream.toByteArray();
-            });
-    }
 
-    public Mono<byte[]> exportMustacheTemplateDocx() {
-        LOG.debug("SERVICE request rendered mustache template docx for current user");
-        return renderedMustacheTemplate()
-            .map(html -> {
-                try(XWPFDocument document = new XWPFDocument();
-                    ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-                    XWPFParagraph paragraph = document.createParagraph();
-                    XWPFRun run = paragraph.createRun();
-                    run.setText(html);
-                    document.write(outputStream);
-                    return outputStream.toByteArray();
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            });
-    }
+
+
+
 
 
 
