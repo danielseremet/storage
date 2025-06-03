@@ -19,9 +19,7 @@ import reactor.core.publisher.Mono;
 import s.domain.StorageFile;
 import s.repository.StorageFileRepository;
 import s.security.AuthoritiesConstants;
-import s.service.ExportStorageFactory;
-import s.service.MinioService;
-import s.service.StorageFileService;
+import s.service.*;
 import s.web.rest.errors.BadRequestAlertException;
 import tech.jhipster.web.util.HeaderUtil;
 import tech.jhipster.web.util.reactive.ResponseUtil;
@@ -55,7 +53,10 @@ public class StorageFileResource {
 
     private final ExportStorageFactory exportStorageFactory;
 
-    public StorageFileResource(StorageFileRepository storageFileRepository, MinioService minioService, StorageFileService storageFileService, ExportStorageFactory exportStorageFactory) {
+
+
+    public StorageFileResource(StorageFileRepository storageFileRepository, MinioService minioService,
+                               StorageFileService storageFileService, ExportStorageFactory exportStorageFactory) {
         this.storageFileRepository = storageFileRepository;
         this.minioService = minioService;
         this.storageFileService = storageFileService;
@@ -96,9 +97,13 @@ public class StorageFileResource {
 
 
     @GetMapping("export/{type}")
-    public Mono<ResponseEntity<Resource>> exportStorageFiles(@PathVariable String type) {
+    public Mono<ResponseEntity<Resource>> exportStorageFiles(@PathVariable ExportTypes type) {
         LOG.debug("REST request to exportStorageFiles {} format", type);
-        return exportStorageFactory.exportStorageFileInfoGeneric(type);
+        return exportStorageFactory.getAllExportTypes()
+            .flatMap(export-> {
+                ExportStorageFiles file = export.get(type);
+                return  file.export();
+            });
     }
 
 

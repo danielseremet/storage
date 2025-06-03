@@ -18,15 +18,16 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Service
-public class ExportStorageInfoCsv extends ExportStorageInfo {
-    private static Logger LOG = LoggerFactory.getLogger(ExportStorageInfo.class);
+public class ExportStorageInfoCsv implements ExportStorageFiles {
+    private static Logger LOG = LoggerFactory.getLogger(ExportStorageInfoCsv.class);
 
     private final StorageFileRepository storageFileRepository;
     private final UserService userService;
     private final Mustache.Compiler compiler;
 
-    public ExportStorageInfoCsv(UserService userService, StorageFileRepository storageFileRepository, Mustache.Compiler mustacheCompiler, StorageFileRepository storageFileRepository1, UserService userService1, Mustache.Compiler compiler) {
-        super(userService, storageFileRepository, mustacheCompiler);
+    public ExportStorageInfoCsv(UserService userService, StorageFileRepository storageFileRepository,
+                                Mustache.Compiler mustacheCompiler, StorageFileRepository storageFileRepository1,
+                                UserService userService1, Mustache.Compiler compiler) {
         this.storageFileRepository = storageFileRepository1;
         this.userService = userService;
         this.compiler = compiler;
@@ -42,15 +43,16 @@ public class ExportStorageInfoCsv extends ExportStorageInfo {
                             Map<String, Object> context = new HashMap<>();
                             context.put("storageFiles", storageFiles);
 
-                            Template tmpl = compiler.compile(new InputStreamReader(getClass().getResourceAsStream("/templates/mustache/exportStorageFileToCsvTemplate.mustache")));
+                            Template tmpl = compiler.compile(new InputStreamReader(
+                                getClass().getResourceAsStream(
+                                    "/templates/mustache/exportStorageFileToCsvTemplate.mustache")));
                             String renderHtml = tmpl.execute(context);
                             return Mono.just(renderHtml.getBytes());
                         })
                 );
         }
 
-
-    public Mono<ResponseEntity<Resource>> exportCsv() {
+    public Mono<ResponseEntity<Resource>> export() {
         LOG.debug("SERVICE request export StorageInfo in csv for current user");
         return exportMustacheTemplateCsv()
             .map(bytes -> new ByteArrayResource(bytes))
