@@ -865,14 +865,6 @@
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
-            <properties>
-                <!-- default Spring profiles -->
-                <liquibase-plugin.password>postgres</liquibase-plugin.password>
-                <liquibase-plugin.url>jdbc:postgresql://psql:5433/storage</liquibase-plugin.url>
-                <liquibase-plugin.username>postgres</liquibase-plugin.username>
-                <profile.test>test,testdev</profile.test>
-                <spring.profiles.active>dev${profile.tls}${profile.no-liquibase}</spring.profiles.active>
-            </properties>
             <dependencies>
                 <dependency>
                     <groupId>org.springframework.boot</groupId>
@@ -982,14 +974,6 @@
         </profile>
         <profile>
             <id>prod</id>
-            <properties>
-                <!-- default Spring profiles -->
-                <liquibase-plugin.password>postgres</liquibase-plugin.password>
-                <liquibase-plugin.url>jdbc:postgresql://psql:5433/storage</liquibase-plugin.url>
-                <liquibase-plugin.username>postgres</liquibase-plugin.username>
-                <profile.test>test,testprod</profile.test>
-                <spring.profiles.active>prod${profile.api-docs}${profile.tls}${profile.e2e}${profile.no-liquibase}</spring.profiles.active>
-            </properties>
             <build>
                 <plugins>
                     <plugin>

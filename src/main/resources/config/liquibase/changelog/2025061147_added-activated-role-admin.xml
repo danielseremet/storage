@@ -6,10 +6,14 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.3.xsd">
 
   <changeSet id="2025061147" author="daniel">
-    <insert tableName="jhi_user_authority">
-      <column name="user_id" valueNumeric="1"/>
-      <column name="authority_name" value="ROLE_ACTIVATED"/>
-    </insert>
+    <sql>
+      INSERT INTO jhi_user_authority (user_id, authority_name)
+      SELECT 1, 'ROLE_ACTIVATED'
+        WHERE NOT EXISTS (
+        SELECT 1 FROM jhi_user_authority
+        WHERE user_id = 1 AND authority_name = 'ROLE_ACTIVATED'
+      );
+    </sql>
   </changeSet>
 
 </databaseChangeLog>
