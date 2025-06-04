@@ -189,4 +189,16 @@ public class StorageFile implements Serializable {
             ", createdDate='" + getCreatedDate() + "'" +
             "}";
     }
+
+    public String toCustomString() {
+         return ",id=" + getId() +
+                ", name= " + getName() +
+                ", size=" + getSize() +
+                ", mimeType= " + getMimeType() +
+                ", path= " + getPath() +
+                ", createdBy= " + getCreatedBy() +
+                ", createdDate= " + getCreatedDate() +
+                ", userId= " + getUserId() + "," ;
+    }
+
 }

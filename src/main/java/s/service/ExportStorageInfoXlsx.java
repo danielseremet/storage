@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import s.domain.StorageFile;
 import s.repository.StorageFileRepository;
+
 import java.io.ByteArrayOutputStream;
 import java.util.List;
 
@@ -40,7 +41,7 @@ class ExportStorageInfoXlsx implements ExportStorageFiles {
 
     }
 
-    public Mono<byte[]> exportMustacheTemplateXlsx() {
+    public Mono<byte[]> exportTemplateXlsx() {
         LOG.debug("SERVICE request rendered mustache template docx for current user");
         return getStorageFiles()
             .flatMap(list -> {
@@ -49,18 +50,18 @@ class ExportStorageInfoXlsx implements ExportStorageFiles {
                     XSSFSheet sheet = document.createSheet();
 
                     Row defaultRow = sheet.createRow(0);
-                        String[] headers = new String[] {"id", "name", "size", "mimeType",
-                            "path", "createdBy", "createdDate", "userId"};
-                        for(int i = 0; i < headers.length; i++) {
-                            defaultRow.createCell(i).setCellValue(headers[i]);
-                        }
+                    String[] headers = StringUtils.substringsBetween(list.get(0).toCustomString(), ",", "=");
+                    for (int i = 0; i < headers.length; i++) {
+                        defaultRow.createCell(i).setCellValue(headers[i]);
+                    }   
 
-                        for (int i = 0; i < list.size(); i++) {
-                            String[] values = StringUtils.substringsBetween(list.get(i).toString(),"=",",");
-                            Row row = sheet.createRow(i+1);
-                            for (int j = 0; j < values.length; j++) {
-                                row.createCell(j).setCellValue(values[i]);
-                            }
+                    for (int i = 0; i < list.size(); i++) {
+                        String[] values = StringUtils.substringsBetween(list.get(i).toCustomString(), "=", ",");
+                        LOG.debug("adding entity for export: {}", list.get(i));
+                        Row row = sheet.createRow(i + 1);
+                        for (int j = 0; j < values.length; j++) {
+                            row.createCell(j).setCellValue(values[j]);
+                        }
 
                     }
                     document.write(outputStream);
@@ -75,7 +76,7 @@ class ExportStorageInfoXlsx implements ExportStorageFiles {
 
     public Mono<ResponseEntity<Resource>> export() {
         LOG.debug("SERVICE request export StorageInfo in excel for current user");
-        return exportMustacheTemplateXlsx()
+        return exportTemplateXlsx()
             .map(bytes -> new ByteArrayResource(bytes))
             .map(resource -> ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"report.xlsx\"")
